@@ -5,20 +5,27 @@ import os
 from pathlib import Path
 import pystray
 from pystray import MenuItem as item
-from PIL import Image, ImageDraw
+
 import keyboard
 from .modules.screenshot import take_screenshot
 
 
-def create_image():
+def load_icon():
     """
-    Create a simple monochrome tray icon.
-    Returns a PIL.Image object.
+    Load the icon image for the tray.
+    Returns a PIL.Image object, handling both dev and PyInstaller environments.
     """
-    image = Image.new('RGB', (64, 64), color='white')
-    dc = ImageDraw.Draw(image)
-    dc.rectangle([16, 16, 48, 48], fill='black')  # Draw a simple black square
-    return image
+    from PIL import Image
+    
+    if getattr(sys, 'frozen', False):
+        # PyInstaller environment
+        base_path = Path(sys._MEIPASS)
+    else:
+        # Development environment
+        base_path = Path(__file__).parent
+    
+    icon_path = base_path / "assets" / "icon.ico"
+    return Image.open(icon_path)
 
 
 def exit_app(icon, item):
@@ -79,7 +86,7 @@ def main():
 
     # Setup system tray menu with only an Exit option
     menu = (item('Exit', exit_app),)
-    icon = pystray.Icon("HotkeyTray", create_image(), "HotkeyTray", menu)
+    icon = pystray.Icon("HotkeyTray", load_icon(), "HotkeyTray", menu)
 
     # Register hotkey to trigger screenshot
     keyboard.add_hotkey(screenshot_hotkey, on_hotkey)
