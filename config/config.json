@@ -1,4 +1,5 @@
 {
     "hotkey": "alt+1",
-    "action": "screenshot"
+    "action": "screenshot",
+    "screenshot_path": "my_screenshots_path"
 }
