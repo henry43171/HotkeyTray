@@ -43,8 +43,7 @@ def load_config():
     """
     # Default values
     defaults = {
-        "hotkey_left": "alt+1",
-        "hotkey_right": "alt+2",
+        "hotkeys": ["alt+1", "alt+2"],
         "action": "screenshot", 
         "screenshot_path": "screenshots"
     }
@@ -59,10 +58,18 @@ def load_config():
         except (json.JSONDecodeError, IOError) as e:
             print(f"Warning: Failed to load config.json: {e}")
     
+    # Handle backward compatibility for old config format
+    if "hotkey_left" in defaults or "hotkey_right" in defaults:
+        # Convert old format to new array format
+        left_key = defaults.get("hotkey_left", "alt+1")
+        right_key = defaults.get("hotkey_right", "alt+2")
+        defaults["hotkeys"] = [left_key, right_key]
+        # Remove old keys
+        defaults.pop("hotkey_left", None)
+        defaults.pop("hotkey_right", None)
+    
     # Override with environment variables
     env_mapping = {
-        "HOTKEY_TRAY_HOTKEY_LEFT": "hotkey_left",
-        "HOTKEY_TRAY_HOTKEY_RIGHT": "hotkey_right",
         "HOTKEY_TRAY_ACTION": "action", 
         "HOTKEY_TRAY_SCREENSHOT_PATH": "screenshot_path"
     }
@@ -71,6 +78,19 @@ def load_config():
         env_value = os.getenv(env_var)
         if env_value is not None:
             defaults[config_key] = env_value
+    
+    # Handle hotkeys environment variables
+    hotkey_left_env = os.getenv("HOTKEY_TRAY_HOTKEY_LEFT")
+    hotkey_right_env = os.getenv("HOTKEY_TRAY_HOTKEY_RIGHT")
+    if hotkey_left_env or hotkey_right_env:
+        current_hotkeys = defaults.get("hotkeys", ["alt+1", "alt+2"])
+        if hotkey_left_env:
+            current_hotkeys[0] = hotkey_left_env
+        if hotkey_right_env and len(current_hotkeys) > 1:
+            current_hotkeys[1] = hotkey_right_env
+        elif hotkey_right_env:
+            current_hotkeys.append(hotkey_right_env)
+        defaults["hotkeys"] = current_hotkeys
             
     return defaults
 
@@ -90,8 +110,14 @@ def main():
     icon = pystray.Icon("HotkeyTray", load_icon(), "HotkeyTray", menu)
 
     # Register hotkeys for dual monitor screenshot from config
-    hotkey_left = config.get('hotkey_left', 'alt+1')
-    hotkey_right = config.get('hotkey_right', 'alt+2')
+    hotkeys = config.get('hotkeys', ['alt+1', 'alt+2'])
+    
+    # Ensure we have at least 2 hotkeys
+    if len(hotkeys) < 2:
+        hotkeys.extend(['alt+1', 'alt+2'][len(hotkeys):])
+    
+    hotkey_left = hotkeys[0]
+    hotkey_right = hotkeys[1]
     
     keyboard.add_hotkey(hotkey_left, on_hotkey_left)
     keyboard.add_hotkey(hotkey_right, on_hotkey_right)
