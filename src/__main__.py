@@ -1,3 +1,4 @@
+# src/__main__.py
 import sys
 import json
 from pathlib import Path
@@ -5,16 +6,17 @@ import pystray
 from pystray import MenuItem as item
 from PIL import Image, ImageDraw
 import keyboard
+from modules.screenshot import take_screenshot
 
 def create_image():
-    # 建立單色圖示
     image = Image.new('RGB', (64, 64), color='white')
     dc = ImageDraw.Draw(image)
     dc.rectangle([16, 16, 48, 48], fill='black')
     return image
 
 def on_hotkey():
-    print("Hotkey triggered!")
+    file_path = take_screenshot()
+    print(f"Screenshot saved: {file_path}")
 
 def exit_app(icon, item):
     icon.stop()
@@ -27,17 +29,14 @@ def load_config():
 
 def main():
     config = load_config()
-    screen_shot_hotkey = config.get("hotkey", "alt+1")  # 預設 alt+1
+    screenshot_hotkey = config.get("hotkey", "alt+1")
 
-    # 設定托盤選單
     menu = (item('Exit', exit_app),)
     icon = pystray.Icon("HotkeyTray", create_image(), "HotkeyTray", menu)
 
-    # 註冊熱鍵
-    keyboard.add_hotkey(screen_shot_hotkey, on_hotkey)
-    print(f"Listening for hotkey: {screen_shot_hotkey}")
+    keyboard.add_hotkey(screenshot_hotkey, on_hotkey)
+    print(f"Listening for hotkey: {screenshot_hotkey}")
 
-    # 開始托盤
     icon.run()
 
 if __name__ == "__main__":
