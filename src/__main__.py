@@ -7,7 +7,7 @@ import pystray
 from pystray import MenuItem as item
 
 import keyboard
-from .modules.screenshot import take_screenshot
+from modules.screenshot import take_screenshot, get_monitor_info
 
 
 def load_icon():
@@ -43,7 +43,8 @@ def load_config():
     """
     # Default values
     defaults = {
-        "hotkey": "alt+1",
+        "hotkey_left": "alt+1",
+        "hotkey_right": "alt+2",
         "action": "screenshot", 
         "screenshot_path": "screenshots"
     }
@@ -60,7 +61,8 @@ def load_config():
     
     # Override with environment variables
     env_mapping = {
-        "HOTKEY_TRAY_HOTKEY": "hotkey",
+        "HOTKEY_TRAY_HOTKEY_LEFT": "hotkey_left",
+        "HOTKEY_TRAY_HOTKEY_RIGHT": "hotkey_right",
         "HOTKEY_TRAY_ACTION": "action", 
         "HOTKEY_TRAY_SCREENSHOT_PATH": "screenshot_path"
     }
@@ -78,33 +80,55 @@ def main():
     Main entry point:
     - Load config
     - Setup tray icon and menu
-    - Register screenshot hotkey
+    - Register dual monitor screenshot hotkeys
     - Start the tray icon
     """
     config = load_config()
-    screenshot_hotkey = config.get("hotkey", "alt+1")  # default hotkey
 
     # Setup system tray menu with only an Exit option
     menu = (item('Exit', exit_app),)
     icon = pystray.Icon("HotkeyTray", load_icon(), "HotkeyTray", menu)
 
-    # Register hotkey to trigger screenshot
-    keyboard.add_hotkey(screenshot_hotkey, on_hotkey)
-    print(f"Listening for hotkey: {screenshot_hotkey}")
+    # Register hotkeys for dual monitor screenshot from config
+    hotkey_left = config.get('hotkey_left', 'alt+1')
+    hotkey_right = config.get('hotkey_right', 'alt+2')
+    
+    keyboard.add_hotkey(hotkey_left, on_hotkey_left)
+    keyboard.add_hotkey(hotkey_right, on_hotkey_right)
+    
+    print("Multi-monitor screenshot ready!")
+    print(f"{hotkey_left} = Left monitor screenshot")
+    print(f"{hotkey_right} = Right monitor screenshot")
     print(f"Screenshot path: {config.get('screenshot_path', 'screenshots')}")
+    
+    # Display monitor info
+    try:
+        monitors = get_monitor_info()
+        print(f"Detected {len(monitors)} monitors:")
+        for mon in monitors:
+            print(f"  Monitor {mon['number']}: {mon['width']}x{mon['height']} at ({mon['left']}, {mon['top']})")
+    except Exception as e:
+        print(f"Warning: Could not detect monitor info: {e}")
 
     # Run the tray icon loop
     icon.run()
 
 
-def on_hotkey():
+def on_hotkey_left():
     """
-    Handler called when the screenshot hotkey is pressed.
-    Reloads config and calls the screenshot module.
+    Handler for Alt+1: Screenshot left monitor.
     """
-    current_config = load_config()  # 每次都重新載入最新配置
-    file_path = take_screenshot(config=current_config)
-    print(f"Screenshot saved: {file_path}")
+    current_config = load_config()
+    file_path = take_screenshot(config=current_config, monitor=1)
+    print(f"Left monitor screenshot saved: {file_path}")
+
+def on_hotkey_right():
+    """
+    Handler for Alt+2: Screenshot right monitor.
+    """
+    current_config = load_config()
+    file_path = take_screenshot(config=current_config, monitor=2)
+    print(f"Right monitor screenshot saved: {file_path}")
 
 
 if __name__ == "__main__":
