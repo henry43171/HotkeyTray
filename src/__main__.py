@@ -145,7 +145,7 @@ def on_hotkey_left():
     Handler for Alt+1: Screenshot left monitor.
     """
     current_config = load_config()
-    file_path = take_screenshot(config=current_config, monitor=1)
+    file_path = take_screenshot(config=current_config, monitor="left")
     print(f"Left monitor screenshot saved: {file_path}")
 
 def on_hotkey_right():
@@ -153,7 +153,7 @@ def on_hotkey_right():
     Handler for Alt+2: Screenshot right monitor.
     """
     current_config = load_config()
-    file_path = take_screenshot(config=current_config, monitor=2)
+    file_path = take_screenshot(config=current_config, monitor="right")
     print(f"Right monitor screenshot saved: {file_path}")
 
 

@@ -10,34 +10,39 @@ def take_screenshot(config=None, save_dir=None, monitor=None):
     Parameters:
     - config: dict, optional, configuration containing 'screenshot_path'
     - save_dir: str, optional, overrides config path
-    - monitor: int, optional, specific monitor number (1=left, 2=right, None=all)
+    - monitor: str, optional
+        * "left"  -> 最左邊的螢幕
+        * "right" -> 最右邊的螢幕
+        * None    -> 截全部螢幕 (mss index 0)
     """
     if save_dir is None:
-        if config and "screenshot_path" in config:
-            save_dir = config["screenshot_path"]
-        else:
-            save_dir = "screenshots"
+        save_dir = config.get("screenshot_path") if config and "screenshot_path" in config else "screenshots"
 
     os.makedirs(save_dir, exist_ok=True)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    # 加入螢幕標識到檔名
-    if monitor is not None:
-        monitor_label = "left" if monitor == 1 else "right" if monitor == 2 else f"monitor{monitor}"
-        filepath = os.path.join(save_dir, f"screenshot_{monitor_label}_{timestamp}.png")
-        
-        # 截取指定螢幕
-        with mss.mss() as sct:
-            monitor_info = sct.monitors[monitor]
-            sct_img = sct.grab(monitor_info)
-            mss.tools.to_png(sct_img.rgb, sct_img.size, output=filepath)
-    else:
-        # 截取所有螢幕（原本的行為）
-        filepath = os.path.join(save_dir, f"screenshot_{timestamp}.png")
-        with mss.mss() as sct:
+
+    with mss.mss() as sct:
+        monitors = sct.monitors[1:]  # 跳過 0 (全螢幕範圍)
+
+        if monitor == "left":
+            target_monitor = min(monitors, key=lambda m: m["left"])
+            monitor_label = "left"
+        elif monitor == "right":
+            target_monitor = max(monitors, key=lambda m: m["left"])
+            monitor_label = "right"
+        elif monitor is None:
+            filepath = os.path.join(save_dir, f"screenshot_{timestamp}.png")
             sct.shot(output=filepath)
+            return filepath
+        else:
+            raise ValueError("monitor must be 'left', 'right', or None")
+
+        filepath = os.path.join(save_dir, f"screenshot_{monitor_label}_{timestamp}.png")
+        sct_img = sct.grab(target_monitor)
+        mss.tools.to_png(sct_img.rgb, sct_img.size, output=filepath)
 
     return filepath
+
 
 def get_monitor_info():
     """
