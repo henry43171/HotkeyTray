@@ -1,3 +1,9 @@
+# src\modules\screenshot.py
+import datetime
+import os
+import mss
+import mss.tools
+
 import datetime
 import os
 import mss
@@ -21,6 +27,7 @@ def take_screenshot(config=None, save_dir=None, monitor=None):
     os.makedirs(save_dir, exist_ok=True)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    # 用 with 確保 sct 被完全關閉
     with mss.mss() as sct:
         monitors = sct.monitors[1:]  # 跳過 0 (全螢幕範圍)
 
@@ -38,10 +45,14 @@ def take_screenshot(config=None, save_dir=None, monitor=None):
             raise ValueError("monitor must be 'left', 'right', or None")
 
         filepath = os.path.join(save_dir, f"screenshot_{monitor_label}_{timestamp}.png")
+
+        # 將圖抓出來後立即寫檔，並手動刪除引用，確保不佔資源
         sct_img = sct.grab(target_monitor)
         mss.tools.to_png(sct_img.rgb, sct_img.size, output=filepath)
+        del sct_img  # 釋放記憶體和檔案句柄
 
     return filepath
+
 
 
 def get_monitor_info():
