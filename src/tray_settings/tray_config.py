@@ -3,7 +3,8 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-CONFIG_PATH = Path(__file__).parent.parent / "config" / "config.json"
+# 統一路徑到專案根目錄下 config/config.json
+CONFIG_PATH = Path(__file__).parent.parent.parent / "config" / "config.json"
 
 # 預設 config，如果 config.json 不存在就用這個建立
 DEFAULT_CONFIG = {
@@ -36,6 +37,11 @@ def load_config():
         config["action"] = os.getenv("ACTION")
     if os.getenv("SCREENSHOT_PATH"):
         config["screenshot_path"] = os.getenv("SCREENSHOT_PATH")
+    
+    # 若 config.json 不存在，自動建立
+    if not CONFIG_PATH.exists():
+        save_config(config)
+        print(f"Created default config at {CONFIG_PATH}")
     
     return config
 
