@@ -13,6 +13,9 @@ from modules.screenshot import take_screenshot, get_monitor_info
 from tray_settings.tray_config import load_config, save_config
 from tray_settings.tray_ui import show_settings_window
 
+import threading
+# from tray_settings.tray_config import load_config
+# from tray_settings.tray_ui import show_settings_window
 
 def load_icon():
     """
@@ -102,9 +105,10 @@ def load_config():
 def on_settings(icon, item):
     """
     Handler for 'Settings' tray menu item.
+    Opens the settings window in a separate thread to avoid blocking pystray.
     """
     config = load_config()
-    show_settings_window(config)
+    threading.Thread(target=show_settings_window, args=(config,), daemon=True).start()
 
 
 def main():
