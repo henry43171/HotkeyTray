@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 import keyboard
 from modules.screenshot import take_screenshot, get_monitor_info
 
+from tray_settings.tray_config import load_config, save_config
+from tray_settings.tray_ui import show_settings_window
+
 
 def load_icon():
     """
@@ -96,6 +99,14 @@ def load_config():
     return config
 
 
+def on_settings(icon, item):
+    """
+    Handler for 'Settings' tray menu item.
+    """
+    config = load_config()
+    show_settings_window(config)
+
+
 def main():
     """
     Main entry point:
@@ -107,7 +118,12 @@ def main():
     config = load_config()
 
     # Setup system tray menu with only an Exit option
-    menu = (item('Exit', exit_app),)
+    
+    menu = (
+    item('Settings', on_settings),
+    item('Exit', exit_app),
+    )
+    
     icon = pystray.Icon("HotkeyTray", load_icon(), "HotkeyTray", menu)
 
     # Register hotkeys for dual monitor screenshot from config
