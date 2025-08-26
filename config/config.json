@@ -1,5 +1,0 @@
-{
-    "hotkeys": ["alt+1", "alt+2"],
-    "action": "screenshot",
-    "screenshot_path": "my_screenshots_path"
-}
