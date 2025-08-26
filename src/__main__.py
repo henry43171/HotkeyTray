@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import pystray
 from pystray import MenuItem as item
+from dotenv import load_dotenv
 
 import keyboard
 from modules.screenshot import take_screenshot, get_monitor_info
@@ -38,61 +39,61 @@ def exit_app(icon, item):
 
 def load_config():
     """
-    Load configuration with priority: ENV vars > config.json > defaults.
+    Load configuration from config/config.json.
+    If the file does not exist, create it using .env or default values.
     Returns a dictionary with config values.
     """
-    # Default values
-    defaults = {
-        "hotkeys": ["alt+1", "alt+2"],
-        "action": "screenshot", 
-        "screenshot_path": "screenshots"
-    }
-    
-    # Load from config.json if exists
-    config_path = Path(__file__).parent.parent / "config" / "config.json"
+    from dotenv import load_dotenv
+    load_dotenv()  # 讀取 .env
+
+    config_dir = Path(__file__).parent.parent / "config"
+    config_path = config_dir / "config.json"
+
+    # 確保 config 目錄存在
+    config_dir.mkdir(parents=True, exist_ok=True)
+
+    # 如果 JSON 存在，直接讀取
     if config_path.exists():
         try:
             with open(config_path, "r", encoding="utf-8") as f:
-                file_config = json.load(f)
-            defaults.update(file_config)
+                config = json.load(f)
         except (json.JSONDecodeError, IOError) as e:
             print(f"Warning: Failed to load config.json: {e}")
-    
-    # Handle backward compatibility for old config format
-    if "hotkey_left" in defaults or "hotkey_right" in defaults:
-        # Convert old format to new array format
-        left_key = defaults.get("hotkey_left", "alt+1")
-        right_key = defaults.get("hotkey_right", "alt+2")
-        defaults["hotkeys"] = [left_key, right_key]
-        # Remove old keys
-        defaults.pop("hotkey_left", None)
-        defaults.pop("hotkey_right", None)
-    
-    # Override with environment variables
-    env_mapping = {
-        "HOTKEY_TRAY_ACTION": "action", 
-        "HOTKEY_TRAY_SCREENSHOT_PATH": "screenshot_path"
-    }
-    
-    for env_var, config_key in env_mapping.items():
-        env_value = os.getenv(env_var)
-        if env_value is not None:
-            defaults[config_key] = env_value
-    
-    # Handle hotkeys environment variables
-    hotkey_left_env = os.getenv("HOTKEY_TRAY_HOTKEY_LEFT")
-    hotkey_right_env = os.getenv("HOTKEY_TRAY_HOTKEY_RIGHT")
-    if hotkey_left_env or hotkey_right_env:
-        current_hotkeys = defaults.get("hotkeys", ["alt+1", "alt+2"])
-        if hotkey_left_env:
-            current_hotkeys[0] = hotkey_left_env
-        if hotkey_right_env and len(current_hotkeys) > 1:
-            current_hotkeys[1] = hotkey_right_env
-        elif hotkey_right_env:
-            current_hotkeys.append(hotkey_right_env)
-        defaults["hotkeys"] = current_hotkeys
-            
-    return defaults
+            config = {}
+    else:
+        config = {}
+
+    # 從 .env 取得 fallback
+    env_hotkeys = os.getenv("HOTKEYS")
+    env_action = os.getenv("ACTION")
+    env_screenshot_path = os.getenv("SCREENSHOT_PATH")
+
+    # 如果 JSON 沒有對應值，就用 .env
+    if "hotkeys" not in config and env_hotkeys:
+        config["hotkeys"] = env_hotkeys.split(",")
+    if "action" not in config and env_action:
+        config["action"] = env_action
+    if "screenshot_path" not in config and env_screenshot_path:
+        config["screenshot_path"] = env_screenshot_path
+
+    # 如果 JSON 沒有任何值，給一個安全預設
+    if "hotkeys" not in config:
+        config["hotkeys"] = ["alt+1", "alt+2"]
+    if "action" not in config:
+        config["action"] = "screenshot"
+    if "screenshot_path" not in config:
+        config["screenshot_path"] = "screenshots"
+
+    # 如果原本 JSON 不存在，建立一份新的 config.json
+    if not config_path.exists():
+        try:
+            with open(config_path, "w", encoding="utf-8") as f:
+                json.dump(config, f, indent=4)
+            print(f"Config file created at {config_path}")
+        except IOError as e:
+            print(f"Error: Failed to create config.json: {e}")
+
+    return config
 
 
 def main():
