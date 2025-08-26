@@ -1,4 +1,6 @@
 # src/tray_settings/tray_ui.py
+import sys
+import os
 import customtkinter as ctk
 from tray_settings.tray_config import save_config
 
@@ -33,6 +35,10 @@ class SettingsWindow(ctk.CTk):
         self.config_data["screenshot_path"] = self.path_var.get().strip() or "screenshots"
         save_config(self.config_data)
         self.destroy()
+
+        # 強制重啟程式
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
 
 def show_settings_window(config_data):
     window = SettingsWindow(config_data)

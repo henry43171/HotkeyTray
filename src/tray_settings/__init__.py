@@ -1,1 +1,2 @@
-# 這個檔案讓 Python 把 settings 當作 package
+# src/tray_settings/__init__.py
+"""tray_settings package for HotkeyTray"""
