@@ -25,7 +25,7 @@ pyinstaller ^
 REM 檢查建置結果
 if exist dist/HotkeyTray.exe (
     echo.
-    echo ✅ Build successful!
+    echo Build successful!
     echo Executable: dist/HotkeyTray.exe
     echo.
     echo Cleaning build artifacts...
@@ -33,10 +33,10 @@ if exist dist/HotkeyTray.exe (
     del /q *.spec
     echo Build artifacts cleaned.
     echo.
-    echo 🎉 HotkeyTray.exe is ready in the dist folder!
+    echo HotkeyTray.exe is ready in the dist folder!
 ) else (
     echo.
-    echo ❌ Build failed!
+    echo Build failed!
     echo Please check the error messages above.
 )
 
