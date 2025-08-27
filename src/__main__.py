@@ -14,8 +14,7 @@ from tray_settings.tray_config import load_config, save_config
 from tray_settings.tray_ui import show_settings_window
 
 import threading
-# from tray_settings.tray_config import load_config
-# from tray_settings.tray_ui import show_settings_window
+
 
 def load_icon():
     """
@@ -50,15 +49,15 @@ def load_config():
     Returns a dictionary with config values.
     """
     from dotenv import load_dotenv
-    load_dotenv()  # 讀取 .env
+    load_dotenv()  # Load .env variables
 
     config_dir = Path(__file__).parent.parent / "config"
     config_path = config_dir / "config.json"
 
-    # 確保 config 目錄存在
+    # Ensure config directory exists
     config_dir.mkdir(parents=True, exist_ok=True)
 
-    # 如果 JSON 存在，直接讀取
+    # Load JSON config if it exists
     if config_path.exists():
         try:
             with open(config_path, "r", encoding="utf-8") as f:
@@ -69,12 +68,12 @@ def load_config():
     else:
         config = {}
 
-    # 從 .env 取得 fallback
+    # Load fallback values from .env
     env_hotkeys = os.getenv("HOTKEYS")
     env_action = os.getenv("ACTION")
     env_screenshot_path = os.getenv("SCREENSHOT_PATH")
 
-    # 如果 JSON 沒有對應值，就用 .env
+    # Use .env values if JSON does not contain the keys
     if "hotkeys" not in config and env_hotkeys:
         config["hotkeys"] = env_hotkeys.split(",")
     if "action" not in config and env_action:
@@ -82,7 +81,7 @@ def load_config():
     if "screenshot_path" not in config and env_screenshot_path:
         config["screenshot_path"] = env_screenshot_path
 
-    # 如果 JSON 沒有任何值，給一個安全預設
+    # Apply safe defaults if values are missing
     if "hotkeys" not in config:
         config["hotkeys"] = ["alt+1", "alt+2"]
     if "action" not in config:
@@ -90,7 +89,7 @@ def load_config():
     if "screenshot_path" not in config:
         config["screenshot_path"] = "screenshots"
 
-    # 如果原本 JSON 不存在，建立一份新的 config.json
+    # Create a new config.json if none exists
     if not config_path.exists():
         try:
             with open(config_path, "w", encoding="utf-8") as f:

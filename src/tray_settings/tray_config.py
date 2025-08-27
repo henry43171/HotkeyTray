@@ -4,10 +4,10 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-# 統一路徑到專案根目錄下 config/config.json
+# Unified path pointing to project_root/config/config.json
 CONFIG_PATH = Path(__file__).parent.parent.parent / "config" / "config.json"
 
-# 預設 config，如果 config.json 不存在就用這個建立
+# Default config used when config.json does not exist
 DEFAULT_CONFIG = {
     "hotkeys": ["alt+1", "alt+2"],
     "screenshot_path": "screenshots",
@@ -16,8 +16,8 @@ DEFAULT_CONFIG = {
 
 def load_config():
     """
-    Load config.json if exists, otherwise create from DEFAULT_CONFIG.
-    Environment variables override if present.
+    Load config.json if it exists, otherwise create it from DEFAULT_CONFIG.
+    Environment variables take precedence if present.
     """
     load_dotenv()
     
@@ -31,7 +31,7 @@ def load_config():
         except (json.JSONDecodeError, IOError) as e:
             print(f"Warning: Failed to load config.json: {e}")
 
-    # 環境變數覆蓋
+    # Override with environment variables if available
     if os.getenv("HOTKEYS"):
         config["hotkeys"] = os.getenv("HOTKEYS").split(",")
     if os.getenv("ACTION"):
@@ -39,7 +39,7 @@ def load_config():
     if os.getenv("SCREENSHOT_PATH"):
         config["screenshot_path"] = os.getenv("SCREENSHOT_PATH")
     
-    # 若 config.json 不存在，自動建立
+    # Auto-create config.json if it does not exist
     if not CONFIG_PATH.exists():
         save_config(config)
         print(f"Created default config at {CONFIG_PATH}")
@@ -48,7 +48,7 @@ def load_config():
 
 def save_config(config: dict):
     """
-    Save the config dict to config.json.
+    Save the given config dictionary to config.json.
     """
     os.makedirs(CONFIG_PATH.parent, exist_ok=True)
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:

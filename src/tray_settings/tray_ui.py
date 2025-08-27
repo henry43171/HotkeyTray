@@ -9,8 +9,6 @@ class SettingsWindow(ctk.CTk):
         super().__init__()
         self.title("Settings")
         self.geometry("400x250")
-        
-        # 使用傳入的 config
         self.config_data = config_data
         
         # Hotkeys Label + Entry
@@ -30,13 +28,13 @@ class SettingsWindow(ctk.CTk):
         self.save_button.pack(pady=20)
         
     def save_and_close(self):
-        # 更新 config dict
+        # Update config dict
         self.config_data["hotkeys"] = [hk.strip() for hk in self.hotkeys_var.get().split(",") if hk.strip()]
         self.config_data["screenshot_path"] = self.path_var.get().strip() or "screenshots"
         save_config(self.config_data)
         self.destroy()
 
-        # 強制重啟程式
+        # Restart
         python = sys.executable
         os.execl(python, python, *sys.argv)
 
