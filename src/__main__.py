@@ -2,6 +2,7 @@
 import sys
 import json
 import os
+import subprocess
 from pathlib import Path
 import pystray
 from pystray import MenuItem as item
@@ -110,6 +111,37 @@ def on_settings(icon, item):
     threading.Thread(target=show_settings_window, args=(config,), daemon=True).start()
 
 
+def open_folder(icon, item):
+    """
+    Handler for 'Open Folder' tray menu item.
+    Opens the screenshot directory.
+    """
+    config = load_config()
+    folder_path = config["screenshot_path"]
+
+    # Get the base path of the executable or script
+    if getattr(sys, 'frozen', False):
+        # PyInstaller environment
+        base_path = Path(sys.executable).parent
+    else:
+        # Development environment
+        base_path = Path(__file__).parent.parent
+    
+    full_path = base_path / folder_path
+    
+    print(f"Opening folder: {full_path}")
+    
+    try:
+        # Use different commands for different OS
+        if sys.platform == "win32":
+            os.startfile(full_path)
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", full_path])
+        else:
+            subprocess.Popen(["xdg-open", full_path])
+    except Exception as e:
+        print(f"Error opening folder: {e}")
+
 def main():
     """
     Main entry point:
@@ -124,7 +156,8 @@ def main():
     
     menu = (
     item('Settings', on_settings),
-    item('Exit', exit_app),
+    item('Open Folder', open_folder),
+    item('Exit', exit_app)
     )
     
     icon = pystray.Icon("HotkeyTray", load_icon(), "HotkeyTray", menu)
